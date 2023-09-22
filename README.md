@@ -1,8 +1,8 @@
-# Query State Lib
+# Query Blockchain State Lib
 This repo is inherited from [QueryStateLib](https://github.com/TravaDataAnalysis/QueryStateLib)
 ### Install 
  
-> pip3 install query-state-lib
+> pip3 install query-blockchain-state-lib
 
 ### Example do query state batch at client
 
