@@ -11,7 +11,7 @@ from query_state_lib.base.providers.auto import get_provider_from_uri
 from query_state_lib.jobs.sent_batch_request_job import SentBatchRequestJob
 
 
-def _sent_batch(list_json_rpc: List[EthJsonRpc], func_sent_handler, err_list=[]):
+def _sent_batch(list_json_rpc: List[EthJsonRpc], func_sent_handler, err_list: list = None):
     """
 
     :param list_json_rpc:
@@ -26,6 +26,8 @@ def _sent_batch(list_json_rpc: List[EthJsonRpc], func_sent_handler, err_list=[])
 
     :return:
     """
+    if err_list is None:
+        err_list = []
     if not list_json_rpc:
         return dict()
     dict_eth_json_rpc = dict()
@@ -38,35 +40,36 @@ def _sent_batch(list_json_rpc: List[EthJsonRpc], func_sent_handler, err_list=[])
         type_list.append(json_rpc)
         dict_eth_json_rpc[json_rpc.id] = json_rpc
     request = []
-    for type in type_dict_list:
-        request += generate_json_rpc_from_type(type, type_dict_list[type])
+    for _type in type_dict_list:
+        request += generate_json_rpc_from_type(_type, type_dict_list[_type])
 
     response = func_sent_handler(request)
     check_response(response)
     for response_item in response:
-        id = response_item.get("id")
+        _id = response_item.get("id")
         result = response_item.get("result")
-        dict_eth_json_rpc[id].set_result(result)
+        dict_eth_json_rpc[_id].set_result(result)
         if not result:
-            err_list.append(dict_eth_json_rpc[id])
-            dict_eth_json_rpc[id].error = response_item.get("error")
+            err_list.append(dict_eth_json_rpc[_id])
+            dict_eth_json_rpc[_id].error = response_item.get("error")
     return dict_eth_json_rpc
 
 
 def check_response(response):
     res_start = response[0]
-    id = res_start.get("id")
+    _id = res_start.get("id")
     err = res_start.get("error")
     res_end = response[-1]
     id2 = res_end.get("id")
     err2 = res_end.get("error")
     if res_start.get("error") and res_end.get("error"):
-        raise Exception(f"""
+        e = Exception(f"""
         Response data err 
-        Request {id} - err {err}
+        Request {_id} - err {err}
         ...
         Request {id2}- err {err2}
         """)
+        raise e
 
 
 class ClientQuerier:
@@ -91,7 +94,8 @@ class ClientQuerier:
             }
             res = requests.post(url, json=data)
             if res.status_code != 200:
-                raise Exception(f"provider {self.provider_url} not support batch-query api")
+                e = Exception(f"provider {self.provider_url} not support batch-query api")
+                raise e
             return res.json().get("response")
 
         sent_handler = sent_batch_to_state_querier_server
@@ -100,21 +104,18 @@ class ClientQuerier:
 
         return dict_eth_json_rpc
 
-    def sent_batch_to_provider(self, list_json_rpc: List[EthJsonRpc], batch_size=2000, max_workers=8,
-                               sleep_time_retries=10, timeout=120, max_retries=3,
-                               retry_exceptions=RETRY_EXCEPTIONS):
-        """
-
-        :param list_json_rpc:
-        :return:
-        """
-
+    def sent_batch_to_provider(
+            self, list_json_rpc: List[EthJsonRpc],
+            batch_size=2000, max_workers=8,
+            sleep_time_retries=10, timeout=120, max_retries=3,
+            retry_exceptions=RETRY_EXCEPTIONS):
         batch_provider = self.batch_provider
 
         def sent_batch_direct(request):
-            job = SentBatchRequestJob(request, batch_provider, batch_size=batch_size, max_workers=max_workers,
-                                      sleep_time_retries=sleep_time_retries, timeout=timeout, max_retries=max_retries,
-                                      retry_exceptions=retry_exceptions, )
+            job = SentBatchRequestJob(
+                request, batch_provider, batch_size=batch_size, max_workers=max_workers,
+                sleep_time_retries=sleep_time_retries, timeout=timeout, max_retries=max_retries,
+                retry_exceptions=retry_exceptions, )
             job.run()
 
             response = job.get_response()
@@ -135,8 +136,8 @@ MAP_TYPE_JSON_RPC_GENERATOR = {
 }
 
 
-def generate_json_rpc_from_type(type, eth_json_rpc_list: List[EthJsonRpc]):
-    generator = MAP_TYPE_JSON_RPC_GENERATOR.get(type)
+def generate_json_rpc_from_type(type_, eth_json_rpc_list: List[EthJsonRpc]):
+    generator = MAP_TYPE_JSON_RPC_GENERATOR.get(type_)
     if generator:
         return list(generator(eth_json_rpc_list))
     else:
