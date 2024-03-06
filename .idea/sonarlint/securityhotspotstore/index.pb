@@ -25,3 +25,8 @@ b
 2src/query_state_lib/jobs/sent_batch_request_job.py,7/3/732cf9044a3f56cac23d2971b0878ef53d7edd27
 n
 >src/query_state_lib/base/mappers/eth_call_balance_of_mapper.py,9/5/952deefa27679e2d9798658d6dcf344691e6bf44
+:
+
+.gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
+g
+7src/query_state_lib/client/moralis_client/connection.py,c/a/caf39c0537ddb189f3e5f4232a55e3243931f001
