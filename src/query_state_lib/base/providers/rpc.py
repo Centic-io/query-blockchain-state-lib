@@ -34,7 +34,7 @@ class BatchHTTPProvider(Web3.HTTPProvider):
                           self.endpoint_uri, text)
         request_data = text.encode('utf-8')
         kwargs = self.get_request_kwargs()
-        kwargs["timeout"]= timeout
+        kwargs["timeout"] = timeout
         raw_response = make_post_request(
             self.endpoint_uri,
             request_data,
